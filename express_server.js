@@ -34,15 +34,18 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);
   const id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
-  console.log(`/urls/${id}`);
   res.redirect(`/urls/${id}`);
 });
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
+});
+
+app.post("/urls/:shortURL/update", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.longURL;
+  res.redirect(`/urls/${req.params.shortURL}`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
