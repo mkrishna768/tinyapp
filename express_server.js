@@ -13,6 +13,7 @@ function generateRandomString() {
   return string;
 };
 
+//checks if email is registered to a user and if so returns user id, if not returns undefined
 function emailLookUp(email) {
   for (let user in users) {
     if (user.email === email) {
@@ -64,6 +65,11 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
+app.get("/login", (req, res) => {
+  const templateVars = { user: users[req.cookies["user_id"]] };
+  res.render("login", templateVars);
+});
+
 app.get("/register", (req, res) => {
   const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("register", templateVars);
@@ -72,7 +78,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
     res.status(400).send("Invalid email or password");
-  } else if (!emailLookUp(req.body.email)) {
+  } else if (emailLookUp(req.body.email)) {
     res.status(400).send("Email already registered");
   } else {
     const id = generateRandomString();
@@ -82,7 +88,6 @@ app.post("/register", (req, res) => {
       password: req.body.password
     };
     res.cookie('user_id', id);
-    console.log(users);
     res.redirect('/urls');
   }
 });
@@ -93,7 +98,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
