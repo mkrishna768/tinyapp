@@ -15,9 +15,9 @@ function generateRandomString() {
 
 //checks if email is registered to a user and if so returns user id, if not returns undefined
 function emailLookUp(email) {
-  for (let user in users) {
-    if (user.email === email) {
-      return user.id;
+  for (let user in users) { 
+    if (users[user].email === email) {
+      return users[user].id;
     }
   }
 }
@@ -93,8 +93,15 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect('/urls');
+  const id = emailLookUp(req.body.email);
+  if (!id) {
+    res.status(403).send("Email not registered");
+  } else if (users[id].password !== req.body.password) {
+    res.status(403).send("Incorrect password");
+  } else {
+    res.cookie('user_id', id);
+    res.redirect('/urls');
+  }
 });
 
 app.post("/logout", (req, res) => {
