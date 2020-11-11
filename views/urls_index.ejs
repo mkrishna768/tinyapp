@@ -20,10 +20,13 @@
         </tr>
       </thead>
       <tbody>
+        <% if (!user) { %>
+            <tr><td>Register/Login to make and see links here.</td></tr>
+        <% } %>
         <% for(let url in urls) { %>
           <tr>
             <td><%= url %></td>
-            <td><%= urls[url] %></td>
+            <td><%= urls[url].longURL %></td>
             <td>
               <form method="GET" action="/urls/<%= url %>">
                 <button class="btn btn-outline-primary">Edit</button>
