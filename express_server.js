@@ -2,15 +2,16 @@ const express = require("express");
 const cookieSession = require('cookie-session');
 const app = express();
 const bcrypt = require('bcrypt');
+const bodyParser = require("body-parser");
+const { getUserByEmail, generateRandomString, urlsForUser} = require("./helpers");
+const PORT = 8080;
+
+app.set("view engine", "ejs");
+
 app.use(cookieSession({
   name: 'session',
   keys: [`some-secret-key`]
 }));
-const PORT = 8080;
-
-app.set("view engine", "ejs");
-const bodyParser = require("body-parser");
-const { getUserByEmail, generateRandomString, urlsForUser} = require("./helpers");
 
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -32,9 +33,13 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "user2RandomID" }
 };
 
-
+//takes user to urls or login if logged out
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if(req.session.user_id){
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.get("/urls.json", (req, res) => {
@@ -46,6 +51,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//add url to data base
 app.post("/urls", (req, res) => {
   const id = generateRandomString();
   urlDatabase[id] = {
@@ -55,16 +61,46 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
+//login page, redirects to urls if logged in
 app.get("/login", (req, res) => {
+  if(req.session.user_id){
+    res.redirect('/urls');
+  } else {
   const templateVars = { user: users[req.session.user_id] };
   res.render("login", templateVars);
+  }
 });
 
+//verifies login then stores cookie with user id
+app.post("/login", (req, res) => {
+  const id = getUserByEmail(req.body.email, users);
+  if (!id) {
+    res.status(403).send("Email not registered");
+  } else if (!bcrypt.compareSync(req.body.password, users[id].password)) {
+    res.status(403).send("Incorrect password");
+  } else {
+    req.session.user_id = id;
+    res.redirect('/urls');
+  }
+});
+
+//clears userid cookie
+app.post("/logout", (req, res) => {
+  req.session.user_id = null;
+  res.redirect('/urls');
+});
+
+//registration page
 app.get("/register", (req, res) => {
+  if(req.session.user_id){
+    res.redirect('/urls');
+  } else {
   const templateVars = { user: users[req.session.user_id] };
   res.render("register", templateVars);
+  }
 });
 
+//verifies info is valid then creates a new user
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
     res.status(400).send("Invalid email or password");
@@ -82,23 +118,7 @@ app.post("/register", (req, res) => {
   }
 });
 
-app.post("/login", (req, res) => {
-  const id = getUserByEmail(req.body.email, users);
-  if (!id) {
-    res.status(403).send("Email not registered");
-  } else if (!bcrypt.compareSync(req.body.password, users[id].password)) {
-    res.status(403).send("Incorrect password");
-  } else {
-    req.session.user_id = id;
-    res.redirect('/urls');
-  }
-});
-
-app.post("/logout", (req, res) => {
-  req.session.user_id = null;
-  res.redirect('/urls');
-});
-
+//page to create new url
 app.get("/urls/new", (req, res) => {
   if (!req.session.user_id) {
     res.redirect("/login");
@@ -108,6 +128,7 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+//updates url if user owns it
 app.post("/urls/:shortURL", (req, res) => {
   if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.status(401).send("Only the owner can edit the link");
@@ -117,6 +138,7 @@ app.post("/urls/:shortURL", (req, res) => {
   }
 });
 
+//deletes url if user owns it
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.status(401).send("Only the owner can delete the link");
@@ -126,20 +148,17 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
+//shows url, if owned can edit here
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { user: users[req.session.user_id], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, owner: urlDatabase[req.params.shortURL].userID };
   res.render("urls_show", templateVars);
 });
 
-
-
+//redirects to long url
 app.get("/u/:shortURL", (req, res) => {
   res.redirect(urlDatabase[req.params.shortURL].longURL);
 });
-app.get("/hello", (req, res) => {
-  res.send(`<html><body>Hello <b>World</b></body></html>\n`);
-});
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`Listening on port ${PORT}!`);
 });
