@@ -6,25 +6,7 @@ app.use(cookieSession({
   name: 'session',
   keys: [`some-secret-key`]
 }));
-const PORT = 8080; // default port 8080
-
-function generateRandomString() {
-  let string = "";
-  const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-  for (let i = 0; i < 6; i++) {
-    string += characters[Math.floor(Math.random() * characters.length)];
-  }
-  return string;
-};
-
-//checks if email is registered to a user and if so returns user id, if not returns undefined
-function emailLookUp(email) {
-  for (let user in users) { 
-    if (users[user].email === email) {
-      return users[user].id;
-    }
-  }
-}
+const PORT = 8080;
 
 function urlsForUser(id) {
   let userUrls = {}
@@ -38,6 +20,7 @@ function urlsForUser(id) {
 
 app.set("view engine", "ejs");
 const bodyParser = require("body-parser");
+const { getUserByEmail, generateRandomString } = require("./helpers");
 
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -96,7 +79,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
     res.status(400).send("Invalid email or password");
-  } else if (emailLookUp(req.body.email)) {
+  } else if (getUserByEmail(req.body.email, users)) {
     res.status(400).send("Email already registered");
   } else {
     const id = generateRandomString();
@@ -111,7 +94,7 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const id = emailLookUp(req.body.email);
+  const id = getUserByEmail(req.body.email, users);
   if (!id) {
     res.status(403).send("Email not registered");
   } else if (!bcrypt.compareSync(req.body.password, users[id].password)) {
