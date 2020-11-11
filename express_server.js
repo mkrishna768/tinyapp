@@ -1,5 +1,5 @@
 const express = require("express");
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 const app = express();
 const bcrypt = require('bcrypt');
 app.use(cookieSession({
@@ -8,35 +8,24 @@ app.use(cookieSession({
 }));
 const PORT = 8080;
 
-function urlsForUser(id) {
-  let userUrls = {}
-  for (let url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      userUrls[url] = urlDatabase[url];
-    }
-  }
-  return userUrls;
-}
-
 app.set("view engine", "ejs");
 const bodyParser = require("body-parser");
-const { getUserByEmail, generateRandomString } = require("./helpers");
-
+const { getUserByEmail, generateRandomString, urlsForUser} = require("./helpers");
 
 app.use(bodyParser.urlencoded({extended: true}));
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: bcrypt.hashSync("dishwasher-funk", 10)
   }
-}
+};
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID" },
@@ -53,7 +42,7 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { user: users[req.session.user_id], urls: urlsForUser(req.session.user_id) };
+  const templateVars = { user: users[req.session.user_id], urls: urlsForUser(req.session.user_id, urlDatabase) };
   res.render("urls_index", templateVars);
 });
 

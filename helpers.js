@@ -1,10 +1,10 @@
 const getUserByEmail = function(email, users) {
-  for (let user in users) { 
+  for (let user in users) {
     if (users[user].email === email) {
       return users[user].id;
     }
   }
-}
+};
 
 const generateRandomString = function() {
   let string = "";
@@ -15,4 +15,14 @@ const generateRandomString = function() {
   return string;
 };
 
-module.exports = {getUserByEmail, generateRandomString}
+const urlsForUser = function(id, urlDatabase) {
+  let userUrls = {};
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      userUrls[url] = urlDatabase[url];
+    }
+  }
+  return userUrls;
+};
+
+module.exports = {getUserByEmail, generateRandomString, urlsForUser};
