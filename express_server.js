@@ -40,9 +40,7 @@ const urlDatabase = {
 app.use("/", (req, res, next) => {
   if (!req.session.visitor_id) {
     req.session.visitor_id = generateRandomString();
-    console.log('Request Type:', req.method);
   }
-  console.log(req.session.visitor_id);
   next();
 });
 
@@ -69,7 +67,9 @@ app.post("/urls", (req, res) => {
   const id = generateRandomString();
   urlDatabase[id] = {
     longURL: req.body.longURL,
-    userID: req.session.user_id
+    userID: req.session.user_id,
+    views: [],
+    uniques: {}
   };
   res.redirect(`/urls/${id}`);
 });
