@@ -11,6 +11,8 @@
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+        <p>Views: <%= views.length %></p>
+        <p>Unique views: <%= Object.keys(uniques).length %></p>
       </div>
     <div class="card-footer text-muted"></div>
   </div>
@@ -26,6 +28,22 @@
           </div>
         </form>
       </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Visitor ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for(let view of views) { %>
+            <tr>
+              <td><%= view[0] %></td>
+              <td><%= view[1] %></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
     <% } else { %>
       <div>Only the creator can edit this link</div>
     <% } %>

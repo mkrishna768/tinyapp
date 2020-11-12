@@ -32,13 +32,23 @@ const users = {
 };
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "user2RandomID" }
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID", views: [], uniques: {} },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "user2RandomID", views: [], uniques: {} }
 };
+
+//assigns unique id to every visitor
+app.use("/", (req, res, next) => {
+  if (!req.session.visitor_id) {
+    req.session.visitor_id = generateRandomString();
+    console.log('Request Type:', req.method);
+  }
+  console.log(req.session.visitor_id);
+  next();
+});
 
 //takes user to urls or login if logged out
 app.get("/", (req, res) => {
-  if(req.session.user_id){
+  if (req.session.user_id) {
     res.redirect('/urls');
   } else {
     res.redirect('/login');
@@ -66,11 +76,11 @@ app.post("/urls", (req, res) => {
 
 //login page, redirects to urls if logged in
 app.get("/login", (req, res) => {
-  if(req.session.user_id){
+  if (req.session.user_id) {
     res.redirect('/urls');
   } else {
-  const templateVars = { user: users[req.session.user_id] };
-  res.render("login", templateVars);
+    const templateVars = { user: users[req.session.user_id] };
+    res.render("login", templateVars);
   }
 });
 
@@ -95,11 +105,11 @@ app.post("/logout", (req, res) => {
 
 //registration page
 app.get("/register", (req, res) => {
-  if(req.session.user_id){
+  if (req.session.user_id) {
     res.redirect('/urls');
   } else {
-  const templateVars = { user: users[req.session.user_id] };
-  res.render("register", templateVars);
+    const templateVars = { user: users[req.session.user_id] };
+    res.render("register", templateVars);
   }
 });
 
@@ -153,7 +163,16 @@ app.delete("/urls/:shortURL", (req, res) => {
 
 //shows url, if owned can edit here
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { user: users[req.session.user_id], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, owner: urlDatabase[req.params.shortURL].userID };
+  urlDatabase[req.params.shortURL].views.push([new Date(Date.now()).toDateString(), req.session.visitor_id]);
+  urlDatabase[req.params.shortURL].uniques[req.session.visitor_id] = 1;
+  const templateVars = {
+    user: users[req.session.user_id],
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    owner: urlDatabase[req.params.shortURL].userID,
+    views: urlDatabase[req.params.shortURL].views,
+    uniques: urlDatabase[req.params.shortURL].uniques
+  };
   res.render("urls_show", templateVars);
 });
 
