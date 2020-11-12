@@ -1,10 +1,13 @@
 const express = require("express");
+const methodOverride = require('method-override');
 const cookieSession = require('cookie-session');
 const app = express();
 const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
 const { getUserByEmail, generateRandomString, urlsForUser} = require("./helpers");
 const PORT = 8080;
+
+app.use(methodOverride('_method'));
 
 app.set("view engine", "ejs");
 
@@ -129,7 +132,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 //updates url if user owns it
-app.post("/urls/:shortURL", (req, res) => {
+app.put("/urls/:shortURL", (req, res) => {
   if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.status(401).send("Only the owner can edit the link");
   } else {
@@ -139,7 +142,7 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 //deletes url if user owns it
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL", (req, res) => {
   if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.status(401).send("Only the owner can delete the link");
   } else {
