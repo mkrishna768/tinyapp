@@ -6,6 +6,7 @@ const getUserByEmail = function(email, users) {
   }
 };
 
+//generates a random string to be used as a unique identifier
 const generateRandomString = function() {
   let string = "";
   const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -15,6 +16,7 @@ const generateRandomString = function() {
   return string;
 };
 
+//generates an array of links owned by a given userID
 const urlsForUser = function(id, urlDatabase) {
   let userUrls = {};
   for (let url in urlDatabase) {

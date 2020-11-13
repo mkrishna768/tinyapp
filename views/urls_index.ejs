@@ -19,6 +19,9 @@
         <tr>
           <th scope="col">Short URL</th>
           <th scope="col">Long URL</th>
+          <th scope="col">Views</th>
+          <th scope="col">Unique Views</th>
+          <th scope="col">Created</th>
         </tr>
       </thead>
       <tbody>
@@ -29,6 +32,9 @@
           <tr>
             <td><%= url %></td>
             <td><%= urls[url].longURL %></td>
+            <td><%= urls[url].views.length %></td>
+            <td><%= Object.keys(urls[url].uniques).length %></td>
+            <td><%= urls[url].created %></td>
             <td>
               <form method="GET" action="/urls/<%= url %>">
                 <button class="btn btn-outline-primary">Edit</button>

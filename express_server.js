@@ -32,8 +32,8 @@ const users = {
 };
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID", views: [], uniques: {} },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "user2RandomID", views: [], uniques: {} }
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID", views: [], uniques: {}, created: "test" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "user2RandomID", views: [], uniques: {}, created: "test" }
 };
 
 //assigns unique id to every visitor
@@ -58,20 +58,30 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { user: users[req.session.user_id], urls: urlsForUser(req.session.user_id, urlDatabase) };
-  res.render("urls_index", templateVars);
+  if (!req.session.user_id) {
+    res.status(401);
+    res.redirect("/login");
+  } else {
+    const templateVars = { user: users[req.session.user_id], urls: urlsForUser(req.session.user_id, urlDatabase) };
+    res.render("urls_index", templateVars);
+  }
 });
 
 //add url to data base
 app.post("/urls", (req, res) => {
-  const id = generateRandomString();
-  urlDatabase[id] = {
-    longURL: req.body.longURL,
-    userID: req.session.user_id,
-    views: [],
-    uniques: {}
-  };
-  res.redirect(`/urls/${id}`);
+  if (!req.session.user_id) {
+    res.status(401).send("Must login to submit url");
+  } else {
+    const id = generateRandomString();
+    urlDatabase[id] = {
+      longURL: req.body.longURL,
+      userID: req.session.user_id,
+      views: [],
+      uniques: {},
+      created: new Date(Date.now()).toDateString()
+    };
+    res.redirect(`/urls/${id}`);
+  }
 });
 
 //login page, redirects to urls if logged in
@@ -163,21 +173,29 @@ app.delete("/urls/:shortURL", (req, res) => {
 
 //shows url, if owned can edit here
 app.get("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL].views.push([new Date(Date.now()).toDateString(), req.session.visitor_id]);
-  urlDatabase[req.params.shortURL].uniques[req.session.visitor_id] = 1;
-  const templateVars = {
-    user: users[req.session.user_id],
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    owner: urlDatabase[req.params.shortURL].userID,
-    views: urlDatabase[req.params.shortURL].views,
-    uniques: urlDatabase[req.params.shortURL].uniques
-  };
-  res.render("urls_show", templateVars);
+  if (!req.session.user_id) {
+    res.status(401);
+    res.redirect("/login");
+  } else if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
+    res.status(401).send("You do not own this link");
+  }else {
+    const templateVars = {
+      user: users[req.session.user_id],
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      owner: urlDatabase[req.params.shortURL].userID,
+      views: urlDatabase[req.params.shortURL].views,
+      uniques: urlDatabase[req.params.shortURL].uniques,
+      created: urlDatabase[req.params.shortURL].created
+    };
+    res.render("urls_show", templateVars);
+  }
 });
 
 //redirects to long url
 app.get("/u/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL].views.push([new Date(Date.now()).toDateString(), req.session.visitor_id]);
+  urlDatabase[req.params.shortURL].uniques[req.session.visitor_id] = 1;
   res.redirect(urlDatabase[req.params.shortURL].longURL);
 });
 
