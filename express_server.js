@@ -59,8 +59,7 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls", (req, res) => {
   if (!req.session.user_id) {
-    res.status(401);
-    res.redirect("/login");
+    res.status(401).send("Please login");
   } else {
     const templateVars = { user: users[req.session.user_id], urls: urlsForUser(req.session.user_id, urlDatabase) };
     res.render("urls_index", templateVars);
@@ -144,7 +143,7 @@ app.post("/register", (req, res) => {
 //page to create new url
 app.get("/urls/new", (req, res) => {
   if (!req.session.user_id) {
-    res.redirect("/login");
+    res.status(401).send("Please login");
   } else {
     const templateVars = { user: users[req.session.user_id] };
     res.render("urls_new", templateVars);
@@ -174,11 +173,10 @@ app.delete("/urls/:shortURL", (req, res) => {
 //shows url, if owned can edit here
 app.get("/urls/:shortURL", (req, res) => {
   if (!req.session.user_id) {
-    res.status(401);
-    res.redirect("/login");
+    res.status(401).send("Please login");
   } else if (req.session.user_id !== urlDatabase[req.params.shortURL].userID) {
     res.status(401).send("You do not own this link");
-  }else {
+  } else {
     const templateVars = {
       user: users[req.session.user_id],
       shortURL: req.params.shortURL,
